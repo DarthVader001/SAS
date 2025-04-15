@@ -1,0 +1,48 @@
+function doGet(e) {
+  try {
+    // Check if required parameters exist
+    if (!e.parameter.type || !e.parameter.data) {
+      return ContentService.createTextOutput("Error: Missing parameters").setMimeType(ContentService.MimeType.TEXT);
+    }
+
+    // Open the Google Sheet
+    var sheet = SpreadsheetApp.openById("1dRB8QDF4bjjkO3-GChkycwc6nL7W36ecOrUDiefIGJ8").getSheetByName("Sheet1");
+
+    // If the sheet is not found
+    if (!sheet) {
+      return ContentService.createTextOutput("Error: Sheet not found").setMimeType(ContentService.MimeType.TEXT);
+    }
+
+    // Get current date and time
+    var now = new Date();
+    var date = Utilities.formatDate(now, Session.getScriptTimeZone(), "yyyy-MM-dd");
+    var time = Utilities.formatDate(now, Session.getScriptTimeZone(), "HH:mm:ss");
+
+    // Initialize RFID and FP values
+    var rfid = "";
+    var fingerprint = "";
+
+    // Split the data based on '|' delimiter
+    var dataParts = e.parameter.data.split("|");
+
+    dataParts.forEach(part => {
+      if (part.startsWith("RFID:")) {
+        rfid = part.replace("RFID:", "").trim();
+      } else if (part.startsWith("FP:")) {
+        fingerprint = part.replace("FP:", "").trim();
+      }
+    });
+
+    // Append the new row with separate columns
+    sheet.appendRow([date, time, rfid, fingerprint]);
+
+    // Log the result
+    Logger.log("Saved Data - Date: " + date + ", Time: " + time + ", RFID: " + rfid + ", FP: " + fingerprint);
+
+    // Return success response
+    return ContentService.createTextOutput("Success").setMimeType(ContentService.MimeType.TEXT);
+  } catch (error) {
+    Logger.log("Error: " + error.toString());
+    return ContentService.createTextOutput("Error: " + error.toString()).setMimeType(ContentService.MimeType.TEXT);
+  }
+}
